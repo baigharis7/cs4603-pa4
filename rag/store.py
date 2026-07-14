@@ -15,8 +15,32 @@ CITATION_COLUMNS = ["chunk_id", "source", "page"]
 
 
 def get_vector_store():
-    raise NotImplementedError("Task 1.4: return a DatabricksVectorSearch handle")
+    """Connect to the managed Databricks Vector Search index."""
+
+    from databricks_langchain import DatabricksVectorSearch
+
+    settings = get_settings()
+
+    if not settings["vs_endpoint"] or not settings["vs_index"]:
+        raise OSError(
+            "VECTOR_SEARCH_ENDPOINT and VECTOR_SEARCH_INDEX must be configured"
+        )
+
+    return DatabricksVectorSearch(
+        index_name=settings["vs_index"],
+        endpoint=settings["vs_endpoint"],
+        # text_column=TEXT_COLUMN,
+        primary_key="chunk_id",
+        doc_uri="source",
+        columns=CITATION_COLUMNS,
+    )
 
 
 def get_retriever(k: int = 4):
-    raise NotImplementedError("Task 1.4: return a top-k retriever over the index")
+    """Return a top-k LangChain retriever over the managed index."""
+
+    if k < 1:
+        raise ValueError("k must be at least 1")
+
+    vector_store = get_vector_store()
+    return vector_store.as_retriever(search_kwargs={"k": k})
