@@ -8,6 +8,8 @@ serving contract — see spec Task 1.6).
 
 from __future__ import annotations
 
+import re
+
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from agent.prompts import SYNTHESIZER_PROMPT
@@ -54,6 +56,19 @@ def make_synthesizer(llm):
         )
 
         final_answer = str(response.content).strip()
+
+        citations = []
+        for result in results:
+            for citation in re.findall(r"\[source: [^\]]+\]", result):
+                if citation not in citations:
+                    citations.append(citation)
+
+        missing_citations = [
+            citation for citation in citations if citation not in final_answer
+        ]
+
+        if missing_citations:
+            final_answer += "\n\nSources: " + " ".join(missing_citations)
 
         if not final_answer:
             final_answer = "Unable to synthesize an answer from the available results."

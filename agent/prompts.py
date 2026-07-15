@@ -10,6 +10,10 @@ Steps may require:
 
 Rules:
 - Preserve dependencies and place retrieval before calculations that need its result.
+- Treat numbers supplied directly by the user as available inputs, not retrieval tasks.
+- For compound growth, create one calculation step that both applies the rate
+  and computes the projected value. Do not split formula setup and application.
+- Avoid duplicate or overlapping calculation steps.
 - State calculations explicitly, including rates, units, and years when available.
 - Do not add a separate presentation or summarization step.
 - Return only a valid JSON array of strings.
