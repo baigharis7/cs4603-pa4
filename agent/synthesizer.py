@@ -1,4 +1,4 @@
-"""Synthesizer node (Task 1.6).
+"""Final-answer synthesizer node (Task 1.6).
 
 TODO: Implement `make_synthesizer(llm)` returning a node that combines
 step_results into one cited answer and writes it to BOTH `final_answer` AND
@@ -57,6 +57,9 @@ def make_synthesizer(llm):
 
         final_answer = str(response.content).strip()
 
+        if not final_answer:
+            final_answer = "Unable to synthesize an answer from the available results."
+
         citations = []
         for result in results:
             for citation in re.findall(r"\[source: [^\]]+\]", result):
@@ -69,9 +72,6 @@ def make_synthesizer(llm):
 
         if missing_citations:
             final_answer += "\n\nSources: " + " ".join(missing_citations)
-
-        if not final_answer:
-            final_answer = "Unable to synthesize an answer from the available results."
 
         return {
             "final_answer": final_answer,
