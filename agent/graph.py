@@ -14,8 +14,10 @@ TODO:
 from __future__ import annotations
 
 import asyncio
+import os
 import sys
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -41,8 +43,33 @@ def _run_async(operation):
         return executor.submit(lambda: asyncio.run(operation())).result()
 
 
+def _configure_mcp_stdio() -> None:
+    """Give MCP subprocesses a real stderr file in serving containers."""
+
+    from langchain_mcp_adapters import sessions
+
+    if getattr(sessions, "_pa4_stdio_configured", False):
+        return
+
+    original_stdio_client = sessions.stdio_client
+
+    @asynccontextmanager
+    async def stdio_client_with_real_stderr(server_params):
+        with open(os.devnull, "w", encoding="utf-8") as errlog:
+            async with original_stdio_client(
+                server_params,
+                errlog=errlog,
+            ) as streams:
+                yield streams
+
+    sessions.stdio_client = stdio_client_with_real_stderr
+    sessions._pa4_stdio_configured = True
+
+
 def load_mcp_tools(server_path: str | None = None):
     """Load the provided MCP tools once through the stdio transport."""
+
+    _configure_mcp_stdio()
 
     from langchain_mcp_adapters.client import MultiServerMCPClient
 

@@ -21,3 +21,6 @@ env/
 Thumbs.db
 .vscode/
 .idea/
+artifacts/
+/mlflow.db
+/pa4-skeleton.zip
